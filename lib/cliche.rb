@@ -2,15 +2,37 @@ module Cliche
 
   class Note
 
-    NOTES = %w{C C# D D# E F F# G G# A A# B}
-
-    def initialize(note)
+    CHROMATIC_UP   = %w{C C# D D# E F F# G G# A A# B}
+    CHROMATIC_DOWN = %w{C Db D Eb E F Gb G Ab A Bb B}
+    
+    def initialize(note, direction = nil)
       @note  = note
-      @notes = NOTES.rotate(NOTES.index(@note))
+      
+      # if this has been set previously when traversiong the scale
+      # keep going in that direction
+      unless @direction = direction
+        @direction   = CHROMATIC_UP.include?(@note) ? :up : :down
+      end
+      
+      if @direction == :up
+        @note_index = CHROMATIC_UP.index(@note)
+      else
+        @note_index = CHROMATIC_DOWN.index(@note)
+      end
+
+      @up_notes    = CHROMATIC_UP.rotate(@note_index)
+      @down_notes  = CHROMATIC_DOWN.rotate(@note_index)
     end
     
     def next
-      Note.new(@notes[@notes.index(@note) + 1])
+      case @direction
+        when :up
+          note = @up_notes[1]
+        when :down
+          note = @down_notes[1]
+      end
+
+      Note.new(note, @direction)
     end
     
     def to_s
@@ -20,7 +42,7 @@ module Cliche
 
   class Scale
     
-    INTERVALS = %w{w w h w w w} # final half-step not required
+    INTERVALS = %w{w w h w w w} # final half-step not required because loops back to octave
     
     def initialize(root)
       @root = root
@@ -34,7 +56,6 @@ module Cliche
           when 'h'
             current_note = current_note.next
         end
-        current_note
       }
     end
   end  
